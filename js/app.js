@@ -40,7 +40,7 @@ function ready(){
 
 		// attempt to spell word
 		var symbols = Speller.check(inputWord);
-		console.log(`symbols : ${symbols}`);
+		console.log(`symbols from app.js: ${symbols}`);
 
 		// was a valid spelling found?
 		if (symbols.length > 0) {
