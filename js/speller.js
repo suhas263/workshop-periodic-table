@@ -94,12 +94,9 @@ function check(inputWord) {
 function lookup(elementSymbol) {
 	// TODO: return the element entry based on specified
 	// symbol (case-insensitive)
-	let matchingPeriodicTableElement;
 	for (let element of elements) {
 		if (element.symbol.toLowerCase() === elementSymbol) {
-			console.log(`element symbol: ${element.symbol}, ${elementSymbol}`);
-			matchingPeriodicTableElement = element;
-			return matchingPeriodicTableElement;
+			return element;
 		}
 	};
 }
