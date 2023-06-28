@@ -4,6 +4,9 @@ export default {
 };
 
 var elements;
+// creating an index for symbols so that we don't have to loop over elements every single time
+// we need to look up something
+var symbols = {};
 
 await loadPeriodicTable();
 
@@ -12,7 +15,17 @@ await loadPeriodicTable();
 
 async function loadPeriodicTable() {
 	elements = await (await fetch("periodic-table.json")).json();
-	// console.log(elements);
+	// to create an index of symbols we loop over each element and then create a key with
+	// the lowercase symbol of that element (e.g: "h" for hydrogen), and within this key save
+	// the element object itself (with its name, number and symbol)
+	for(let element of elements) {
+		symbols[element.symbol.toLowerCase()] = element;
+	}
+	// we now have a symbols object/index that can do the lookup for us, we don't have to loop
+	// over the elements to find a match now. optimise the algorithm
+	// big O notation - time complexity & memory complexity an algorithm takes
+	// in the worst case, average case and best case. Way of describing the worst possible outcome
+	// O(1) is constant time - one operation.
 }
 
 function check(inputWord) {
@@ -92,11 +105,12 @@ function check(inputWord) {
 
 
 function lookup(elementSymbol) {
-	// TODO: return the element entry based on specified
-	// symbol (case-insensitive)
-	for (let element of elements) {
-		if (element.symbol.toLowerCase() === elementSymbol) {
-			return element;
-		}
-	};
+	// since we already have a `symbols` index built, we just need to look up the
+	// `elementSymbol` from this index; which makes this very quick
+	return symbols[elementSymbol];
+	// we call this the o(1) operation - single operation; no built-in complexity
+	// using JS we do a single unit of operation; unit of cost
+	// earlier we were doing an O(n) on a single symbol; so for m symbols we were doing O(n) * m times
+	// 	 so from O(n) * m; we went to O(1).
+	// https://www.freecodecamp.org/news/my-first-foray-into-technology-c5b6e83fe8f1/
 }
