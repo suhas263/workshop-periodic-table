@@ -28,79 +28,111 @@ async function loadPeriodicTable() {
 	// O(1) is constant time - one operation.
 }
 
-function check(inputWord) {
-	// TODO: determine if `inputWord` can be spelled
-	// with periodic table symbols; return array with
-	// them if so (empty array otherwise)
+// function to find candidates that can match our `inputWord`.
+// we want to find out how we can spell with `inputWord` with lesser number of symbols
+function findCandidates(inputWord) {
+	var oneLetterSymbols = [];
+	var twoLetterSymbols = [];
+	// debugger;
 
-	// will only check if we have input; in case not we want to return an empty array.
-	if(inputWord.length > 0) {
-		// I had a tough time figuring this one out
-		// elements.forEach((element) => {
+	for (let i= 0; i<inputWord.length; i++){
+		// collect all one-letter candidates
+		// checking if the inputWord[i] is present as a property in the symbols object
+		// we can also use `symbols.hasOwnProperty(inputWord[i])` instead of `inputWord[i] in symbols`
+		// The main difference between hasOwnProperty() method and `in` operator is that the latter
+		// checks within own and inherited properties of the object.
+		// Also checking if our oneLetterSymbols array already has the word or not; if it does we don't want to look up again
+		if (inputWord[i] in symbols && !oneLetterSymbols.includes(inputWord[i])) {
+			// instead of using the two conditions above, we can use the Set data structure
+			// that'd ensure we don't have to check the array for uniqueness
+			// however the problem with using sets is that we need the order here; whereas Sets aren't ordered
+			// using `includes` method of the array is not as efficient as the `has` method of the Set
+			// but, we make the trade-off for the ordering as we can only have a max of a handful of dozen of candidates
+			oneLetterSymbols.push(inputWord[i]);
+		}
 
-		//recursion doesn't work with forEach as there is no way to stop or break a forEach loop
-		// when I switched to a for..of loop it started working
-		for (let element of elements) {
-			let symbol = element.symbol.toLowerCase();
-			if(symbol.length <= inputWord.length) {
-				// did the symbol match the first one or two characters in `inputWord`
-				// depends on the symbol passed in this iteration - can be one letter or two letters
-				// e.g:"yucky" - matches the symbol "Y" which is one charac long;
-				if (inputWord.slice(0, symbol.length) === symbol) {
-					console.log(`sliced input word: ${inputWord.slice(0, symbol.length)}; symbol: ${symbol}`);
-					// there will either be a match or no match to the sliced input word.
-					// If it matches; then it will check if there are more characters left in the `inputWord`.
-					// e.g: "ucky" from the example above ("yucky")
+		//for two letter candidates we need to ensure we have to stop at the second last letter of the word
+		if( i<= (inputWord.length - 2)) {
+			let two = inputWord.slice(i, i+2); // slice inputWord with length 2; non-exclusive of the end
 
-					debugger;
-					// does it still have characters left?
-					if(inputWord.length > symbol.length) {
-						// we now know there are more characters left, so we run a recursion on the remaining characters
-						// using recursion here - recursion will not need any state management as the recursed functions are
-						// passed with updated parameters e.g: check("ucky") in this case. Whereas when using a loop,
-						// we need to manage state by using external states like using "i" for "for loops" and then run it for every
-						// character of the `inputWord`
-						let res = check(inputWord.slice(symbol.length));
-						// the recursive function will keep calling itself until there are no more characters left to match
-						// think of recursion always in reverse. New call stacks are added one upon the other and then execution
-						// begins and starts returning one after the other to return to the original call stack.
-						// Each of the call stack has its own variables and states.
+			//similarly we do the same for two-letter candidates
+			if (two in symbols && !twoLetterSymbols.includes(two)) {
+				twoLetterSymbols.push(two);
+			}
 
-						// matched successfully?
-						if (res.length > 0) {
-							console.log(`matched successfully: ${[ symbol,  ...res ]}`);
-							return [ symbol,  ...res ];
-							// check with the call stack while running the application
-							// what does res hold? why do we check for its length?
-							// res holds the result of the lookup with elements - it returns the matched element / symbol
-							// it runs backwards; so this is how it will be returned from the call stack
-							// for the very last run, the symbol will be 'y', and since are no more characters left,
-							// we will jump to the else block and return the last symbol we found which is 'y'
-							// this will be the return of the last check recursion call stack and this will be passed
-							// to the next call stack below
-							// res = ['y']
-							// for the next recursion call stack we will have symbol: 'k'; and the res from the call
-							// stack above which is res = ['y']; so the return will be ['k','y']
-							// res = ['k','y']
-							// next -> symbol: 'c', res: ['k', 'y'] => return ['c','k','y']
-							// res = ['c','k','y']
-							// next -> symbol: 'u', res: ['c','k', 'y'] => return ['u','c','k','y']
-							// res = ['u','c','k','y']
-							// next -> symbol: 'y', res: ['u','c','k', 'y'] => return ['y','u','c','k','y']
-							// res = ['y','u','c','k','y']
-							// and this will be the returned from the check function finally
-						}
+		}
+	}
+	// we want the algorithm to prefer two letter symbols to one letter symbols
+	return [ ...twoLetterSymbols, ...oneLetterSymbols ];
+}
+
+
+function spellWord(candidates, charsLeft){
+	// debugger;
+	// since spellWord will be a recursive function, we need to define a base condition
+	// if there is no characters left, there is nothing to do for that particular iteration so we can return an empty array
+	if(charsLeft.length == 0){
+		return [];
+	} else {
+		// check for two-letter symbols first; and this can only be done if we only have at-least two characters left
+		if(charsLeft.length >= 2) {
+			let firstTwoChars = charsLeft.slice(0,2);
+			let remainingChars = charsLeft.slice(2);
+
+			// found a match?
+			if(candidates.includes(firstTwoChars)){
+				// do we have more work? - are there remaining characters?
+				if(remainingChars.length > 0){
+					let result = spellWord(candidates, remainingChars);
+
+					// if the result responds with what we were trying to match; we can return the result
+					// joining an empty string
+					if(result.join('') === remainingChars) {
+						return [ firstTwoChars, ...result ];
 					}
-					else { // case for no characters left
-						console.log(`no more characters left, completely matched, symbols are: ${[ symbol ]}`);
-						return [ symbol ];
-					}
+				} else {
+					// if there are no remaining characters left, return the `firstTwoChars` (or in this case - the last two characters)
+					return [ firstTwoChars ];
 				}
+			}
+		}
 
+		// check for one-letter symbols next; and this can only be done if we only have at-least one character left
+		if(charsLeft.length >= 1) {
+			let firstChar = charsLeft[0];
+			let remainingChars = charsLeft.slice(1);
+
+			// found a match?
+			if(candidates.includes(firstChar)){
+				// do we have more work? - are there remaining characters?
+				if(remainingChars.length > 0){
+					let result = spellWord(candidates, remainingChars);
+
+					// if the result responds with what we were trying to match; we can return the result
+					// joining an empty string
+					if(result.join('') === remainingChars) {
+						return [ firstChar, ...result ];
+					}
+				} else {
+					// if there are no remaining characters left, return the `firstTwoChars` (or in this case - the last two characters)
+					return [ firstChar ];
+				}
 			}
 		}
 	}
+
+	// should return an empty array if nothing is found
 	return [];
+}
+
+function check(inputWord) {
+	// debugger;
+	var candidates = findCandidates(inputWord);
+
+	// recursive function
+	// passing candidates as we don't want to be referencing it as an outer variable always
+	// passing it along will be much easier as we are not mutating the candidates array anyhow
+	return spellWord(candidates, inputWord);
 }
 
 
